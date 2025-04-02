@@ -6,32 +6,26 @@ import PackageDescription
 let package = Package(
     name: "ClientHub",
     platforms: [
-        .iOS(.v14),
-        .macOS(.v11),
-        .tvOS(.v14),
-        .watchOS(.v7)
+        .iOS(.v14), .macOS(.v11), .tvOS(.v14), .watchOS(.v7)
     ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "ClientHub",
-            targets: ["ClientHub"]),
+        .library(name: "ClientHub", targets: ["ClientHub"]),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-//        .package(url: "https://github.com/alibaba/aliyunpan-ios-sdk", .upToNextMajor(from: "0.3.6")),
+        .package(url: "https://github.com/alibaba/aliyunpan-ios-sdk", .upToNextMajor(from: "0.3.6")),
         .package(url: "https://github.com/alexiscn/EmbyKit", .branch("main"))
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "ClientHub",
-//            dependencies: ["AliyunPanSDK", "EmbyKit"]),
-            dependencies: ["EmbyKit"]),
+            dependencies: [
+                .product(name: "AliyunpanSDK", package: "aliyunpan-ios-sdk"),
+                "EmbyKit"
+            ]
+        ),
         .testTarget(
             name: "ClientHubTests",
             dependencies: ["ClientHub"]
-        ),
+        )
     ]
 )
