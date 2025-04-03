@@ -13,6 +13,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/alibaba/aliyunpan-ios-sdk", .upToNextMajor(from: "0.3.6")),
+        .package(url: "https://github.com/kishikawakatsumi/SMBClient", .upToNextMajor(from: "0.3.1")),
         .package(url: "https://github.com/alexiscn/EmbyKit", .branch("main"))
     ],
     targets: [
@@ -20,6 +21,7 @@ let package = Package(
             name: "ClientHub",
             dependencies: [
                 .product(name: "AliyunpanSDK", package: "aliyunpan-ios-sdk"),
+                .product(name: "SMBClient", package: "SMBClient"),
                 "EmbyKit"
             ]
         ),
