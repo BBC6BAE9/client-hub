@@ -2,7 +2,7 @@
 //  EmbyLoginView.swift
 //  Demo
 //
-//  Created by ihenryhuang on 2025/4/2.
+//  Created by hong on 2025/4/2.
 //
 
 import SwiftUI
