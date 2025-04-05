@@ -8,37 +8,70 @@
 import Foundation
 import EmbyKit
 import SwiftUI
+import CacheKit
 
-class EmbyClient: ClientProtocol {
+@MainActor public class EmbyClient: ClientProtocol {
     
-    let embyClient: EmbyKit.EmbyClient
+    var embyClient: EmbyKit.EmbyClient?
+    
+    let cache = DiskCache<AuthenticationResponse>(filename:"EmbyClient", expirationInterval: 30 * 24 * 60 * 60)
 
-    init(url: URL) {
+    public init() {
         EmbyKit.EmbyClient.configure(client: "VideoRoom",
                              appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
                              deviceId: "<deviceId>",
                              deviceName: "测试")
         
-        self.embyClient = .init(baseURL: url)
+        Task{
+            await xxx()
+        }
     }
     
-    func login() async throws {
+    
+    func xxx() async {
+        try? await cache.loadFromDisk()
+        if let authenticationResponse: AuthenticationResponse = try await cache.value(forKey: "emby_token") {
+            
+            
+            let haha = authenticationResponse
+            print("------------------------\(authenticationResponse.user.id)")
+            print("------------------------\(authenticationResponse.accessToken)")
+            print("------------------------\(haha)")
+            
+//            self.embyClient = EmbyClient(baseURL: URL(string: "")!, userId: authenticationResponse.userId, accessToken: authenticationResponse.accessToken))
+            
+        }
+        
+
+        Task{ @MainActor in
+            
+//            self.embyClient = EmbyKit.EmbyClient
+            
+//            embyClient?.accessToken =
+        }
+    }
+    
+    public func login() async throws {
+        print("@@@@@@")
         // Simulate a login page where the user inputs their username and password
-        let (username, password) = try await presentLoginPage()
+        let authenticationResponse = try await presentLoginPage()
         
-        let authenticationResponse = try await embyClient.authenticate(username: username, password: password)
+        print("user input username: \(authenticationResponse)")
         
-        print("\(authenticationResponse.user.name)")
+        
         // TODO: 把token信息在磁盘上持久化
+        await cache.setValue(authenticationResponse, forKey: "emby_token")
+        try? await cache.saveToDisk()
+        print("@@@@@@")
     }
     
-    private func presentLoginPage() async throws -> (String, String) {
+    private func presentLoginPage() async throws -> AuthenticationResponse {
         return try await withCheckedThrowingContinuation { continuation in
             // Present the login UI
             Task { @MainActor in
                 // 使用SwiftUI创建一个简单的登录界面
-                let loginView = EmbyLoginView { username, password in
-                    continuation.resume(returning: (username, password))
+                let loginView = EmbyLoginView { authenticationResponse in
+                    continuation.resume(returning: authenticationResponse)
                 }
                 
                 // 创建一个UIHostingController来承载SwiftUI视图
