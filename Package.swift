@@ -23,8 +23,8 @@ let package = Package(
             dependencies: [
                 .product(name: "AliyunpanSDK", package: "aliyunpan-ios-sdk"),
                 .product(name: "SMBClient", package: "SMBClient"),
-                "EmbyKit",
-                "CacheKit"
+                .product(name: "EmbyKit", package: "EmbyKit"),
+                .product(name: "CacheKit", package: "cachekit")
             ]
         ),
         .testTarget(

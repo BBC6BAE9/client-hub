@@ -11,6 +11,4 @@ import Foundation
 class ClientHub {
     private var clients: [any ClientProtocol] = []
     
-    
-    
 }

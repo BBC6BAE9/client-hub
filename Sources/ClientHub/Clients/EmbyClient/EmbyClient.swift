@@ -10,60 +10,31 @@ import EmbyKit
 import SwiftUI
 import CacheKit
 
-@MainActor public class EmbyClient: ClientProtocol {
+@MainActor public class EmbyClient: @preconcurrency ClientProtocol {
+   
+    
+    
+    var clientID: String {
+        return "123"
+    }
     
     var embyClient: EmbyKit.EmbyClient?
-    
-    let cache = DiskCache<AuthenticationResponse>(filename:"EmbyClient", expirationInterval: 30 * 24 * 60 * 60)
 
     public init() {
         EmbyKit.EmbyClient.configure(client: "VideoRoom",
                              appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
                              deviceId: "<deviceId>",
                              deviceName: "测试")
-        
-        Task{
-            await xxx()
-        }
     }
     
-    
-    func xxx() async {
-        try? await cache.loadFromDisk()
-        if let authenticationResponse: AuthenticationResponse = try await cache.value(forKey: "emby_token") {
-            
-            
-            let haha = authenticationResponse
-            print("------------------------\(authenticationResponse.user.id)")
-            print("------------------------\(authenticationResponse.accessToken)")
-            print("------------------------\(haha)")
-            
-//            self.embyClient = EmbyClient(baseURL: URL(string: "")!, userId: authenticationResponse.userId, accessToken: authenticationResponse.accessToken))
-            
-        }
-        
-
-        Task{ @MainActor in
-            
-//            self.embyClient = EmbyKit.EmbyClient
-            
-//            embyClient?.accessToken =
-        }
-    }
-    
-    public func login() async throws {
-        print("@@@@@@")
+    public func login<AuthenticationResponse>() async throws -> AuthenticationResponse {
         // Simulate a login page where the user inputs their username and password
         let authenticationResponse = try await presentLoginPage()
         
-        print("user input username: \(authenticationResponse)")
+        return authenticationResponse as! AuthenticationResponse
         
-        
-        // TODO: 把token信息在磁盘上持久化
-        await cache.setValue(authenticationResponse, forKey: "emby_token")
-        try? await cache.saveToDisk()
-        print("@@@@@@")
     }
+    
     
     private func presentLoginPage() async throws -> AuthenticationResponse {
         return try await withCheckedThrowingContinuation { continuation in

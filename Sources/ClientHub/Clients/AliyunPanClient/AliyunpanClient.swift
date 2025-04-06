@@ -23,18 +23,20 @@ class AliyunpanClient {
 }
 
 extension AliyunpanClient: ClientProtocol {
+    func login<AliyunpanToken>() async throws -> AliyunpanToken {
+        return try await client.authorize(credentials: .pkce) as! AliyunpanToken
+    }
+    
+    
+    var clientID: String {
+        return "123"
+    }
+    
     
     func isExpired() async throws -> Bool {
         return false
     }
-    
-    
-    func login() async throws {
-        let token = try await client.authorize(credentials: .pkce)
-        // TODO: 扫库刮削
-        
-    }
-    
+
     func detail(id: String) async throws {
         // TODO: 从刮削库里面获取影片的信息
         
