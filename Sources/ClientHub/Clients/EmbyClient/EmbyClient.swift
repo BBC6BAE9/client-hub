@@ -8,37 +8,46 @@
 import Foundation
 import EmbyKit
 import SwiftUI
+import CacheKit
 
-class EmbyClient: ClientProtocol {
+@MainActor public class EmbyClient: @preconcurrency ClientProtocol {
+   
     
-    let embyClient: EmbyKit.EmbyClient
+    
+    var clientID: String {
+        return "123"
+    }
+    
+    var embyClient: EmbyKit.EmbyClient?
 
-    init(url: URL) {
+    public init() {
         EmbyKit.EmbyClient.configure(client: "VideoRoom",
                              appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
                              deviceId: "<deviceId>",
                              deviceName: "测试")
-        
-        self.embyClient = .init(baseURL: url)
     }
     
-    func login() async throws {
+    public func login<AuthenticationResponse>() async throws -> AuthenticationResponse {
         // Simulate a login page where the user inputs their username and password
-        let (username, password) = try await presentLoginPage()
+        let authenticationResponse = try await presentLoginPage()
         
-        let authenticationResponse = try await embyClient.authenticate(username: username, password: password)
+        return authenticationResponse as! AuthenticationResponse
         
-        print("\(authenticationResponse.user.name)")
-        // TODO: 把token信息在磁盘上持久化
     }
     
-    private func presentLoginPage() async throws -> (String, String) {
+    
+    private func presentLoginPage() async throws -> AuthenticationResponse {
         return try await withCheckedThrowingContinuation { continuation in
             // Present the login UI
             Task { @MainActor in
                 // 使用SwiftUI创建一个简单的登录界面
-                let loginView = EmbyLoginView { username, password in
-                    continuation.resume(returning: (username, password))
+                let loginView = EmbyLoginView { result in
+                    switch result {
+                    case .success(let response):
+                        continuation.resume(returning: response)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
                 }
                 
                 // 创建一个UIHostingController来承载SwiftUI视图

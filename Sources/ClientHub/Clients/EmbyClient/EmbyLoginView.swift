@@ -6,45 +6,96 @@
 //
 
 import SwiftUI
-
+import EmbyKit
 
 // Define the LoginView using SwiftUI
 struct EmbyLoginView: View {
-    var onLogin: (String, String) -> Void
+    @Environment(\.presentationMode) var presentationMode
+
+    @MainActor var onLogin: (Result<AuthenticationResponse, Error>) -> Void
     
-    @State private var username: String = ""
-    @State private var password: String = ""
+    @State private var name: String = "synology emby"
+    @State private var host: String = "http://192.168.50.106"
+    @State private var port: String = "6908"
+    @State private var username: String = "xiaoya"
+    @State private var password: String = "huanghong0169"
     
     var body: some View {
-        VStack {
-            TextField("Username", text: $username)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            
-            TextField("Password", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-            
-            Button(action: {
-                // Ensure the username and password are captured correctly
-                onLogin(username, password)
-            }) {
-                Text("Login")
-                    .frame(maxWidth: .infinity)
+        NavigationView {
+            ScrollView {
+                VStack {
+                    TextField("name", text: $name)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    
+                    TextField("host", text: $host)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    
+                    TextField("port", text: $port)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    
+                    TextField("Username", text: $username)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    
+                    TextField("Password", text: $password)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    
+                    Text("Moviers使用Emby官方API直连媒体服务器，使用过程中不会刮削扫描媒体库文件")
+                        .foregroundColor(.secondary)
+                    
+                    Button(action: {
+                        Task { @MainActor in
+                            do {
+                                guard let url = URL(string: "\(host):\(port)") else {
+                                    // TODO: throw error
+                                    return
+                                }
+                                let embyClient = EmbyKit.EmbyClient(baseURL: url)
+                                let authenticationResponse = try await embyClient.authenticate(username: username, password: password)
+                                
+                                presentationMode.wrappedValue.dismiss()
+                                onLogin(.success(authenticationResponse))
+                            } catch {
+                                onLogin(.failure(error))
+                            }
+                        }
+                    }) {
+                        Text("Login")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
                     .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+                    
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                        onLogin(.failure(EmbyLoginError.userCancelled))
+                    }) {
+                        Text("Dismiss")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.gray)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding()
+                }
+                .padding()
             }
-            .padding()
+            .navigationTitle("添加Emby")
         }
-        .padding()
     }
 }
 
+extension AuthenticationResponse: @unchecked Sendable {}
 
-#Preview {
-    EmbyLoginView(onLogin: { _, _ in
-        
-    })
+// 添加自定义错误类型
+enum EmbyLoginError: Error {
+    case userCancelled
 }
