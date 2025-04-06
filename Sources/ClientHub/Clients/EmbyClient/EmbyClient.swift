@@ -41,8 +41,13 @@ import CacheKit
             // Present the login UI
             Task { @MainActor in
                 // 使用SwiftUI创建一个简单的登录界面
-                let loginView = EmbyLoginView { authenticationResponse in
-                    continuation.resume(returning: authenticationResponse)
+                let loginView = EmbyLoginView { result in
+                    switch result {
+                    case .success(let response):
+                        continuation.resume(returning: response)
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    }
                 }
                 
                 // 创建一个UIHostingController来承载SwiftUI视图

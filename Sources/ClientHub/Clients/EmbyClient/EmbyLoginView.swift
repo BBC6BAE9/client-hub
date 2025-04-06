@@ -12,7 +12,7 @@ import EmbyKit
 struct EmbyLoginView: View {
     @Environment(\.presentationMode) var presentationMode
 
-    @MainActor var onLogin: (AuthenticationResponse) -> Void
+    @MainActor var onLogin: (Result<AuthenticationResponse, Error>) -> Void
     
     @State private var name: String = "synology emby"
     @State private var host: String = "http://192.168.50.106"
@@ -48,9 +48,6 @@ struct EmbyLoginView: View {
                         .foregroundColor(.secondary)
                     
                     Button(action: {
-                        
-                        presentationMode.wrappedValue.dismiss()
-
                         Task { @MainActor in
                             do {
                                 guard let url = URL(string: "\(host):\(port)") else {
@@ -59,9 +56,11 @@ struct EmbyLoginView: View {
                                 }
                                 let embyClient = EmbyKit.EmbyClient(baseURL: url)
                                 let authenticationResponse = try await embyClient.authenticate(username: username, password: password)
-                                onLogin(authenticationResponse)
+                                
+                                presentationMode.wrappedValue.dismiss()
+                                onLogin(.success(authenticationResponse))
                             } catch {
-                                // TODO: throw error
+                                onLogin(.failure(error))
                             }
                         }
                     }) {
@@ -69,6 +68,19 @@ struct EmbyLoginView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding()
+                    
+                    Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                        onLogin(.failure(EmbyLoginError.userCancelled))
+                    }) {
+                        Text("Dismiss")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.gray)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
@@ -82,3 +94,8 @@ struct EmbyLoginView: View {
 }
 
 extension AuthenticationResponse: @unchecked Sendable {}
+
+// 添加自定义错误类型
+enum EmbyLoginError: Error {
+    case userCancelled
+}
